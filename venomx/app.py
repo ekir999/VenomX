@@ -1,8 +1,144 @@
 import sys
-from PyQt6.QtWidgets import QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu, QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
-from PyQt6.QtGui import QAction
-from PyQt6.QtCore import Qt
+import re
+from PyQt6.QtWidgets import (
+    QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu,
+    QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel
+)
+from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut
+from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
+
+class Highlighter(QSyntaxHighlighter):
+    def __init__(self, document):
+        super().__init__(document)
+        self.highlighted_terms = []
+        self.keywords = [
+            "def", "class", "if", "else", "elif", "import", "from", "as",
+            "try", "except", "finally", "with", "return", "break", "continue",
+            "for", "while", "in", "is", "not", "and", "or", "lambda", "global",
+            "nonlocal", "assert", "async", "await"
+        ]
+        self.builtin_functions = [
+            "abs", "all", "any", "ascii", "bin", "bool", "breakpoint", 
+            "bytearray", "bytes", "callable", "chr", "classmethod", 
+            "compile", "complex", "copyright", "credits", "delattr", 
+            "dict", "dir", "divmod", "enumerate", "eval", "exec", 
+            "exit", "filter", "float", "format", "frozenset", 
+            "getattr", "globals", "hasattr", "hash", "help", "hex", 
+            "id", "input", "int", "isinstance", "issubclass", "iter", 
+            "len", "license", "list", "locals", "map", "max", 
+            "memoryview", "min", "next", "object", "oct", "open", 
+            "ord", "pow", "print", "property", "quit", "range", 
+            "repr", "reversed", "round", "set", "setattr", "slice", 
+            "sorted", "staticmethod", "str", "sum", "super", 
+            "tuple", "type", "vars", "zip"
+        ]
+
+    def highlightBlock(self, text):
+        for function in self.builtin_functions:
+            pattern = r'\b' + re.escape(function) + r'\s*\('
+            for match in re.finditer(pattern, text):
+                length = match.end() - match.start()
+                format = QTextCharFormat()
+                format.setForeground(QColor("orange"))
+                self.setFormat(match.start(), length, format)
+
+        operators_pattern = r'(?<!\w)([+\-*/%&|^=<>!]=?|==|!=|and|or|not)(?!\w)'
+        for match in re.finditer(operators_pattern, text):
+            length = match.end() - match.start()
+            format = QTextCharFormat()
+            format.setForeground(QColor("darkgray"))
+            self.setFormat(match.start(), length, format)
+
+        annotation_pattern = r'@\w+'
+        for match in re.finditer(annotation_pattern, text):
+            length = match.end() - match.start()
+            format = QTextCharFormat()
+            format.setForeground(QColor("lightgray"))
+            self.setFormat(match.start(), length, format)
+
+        single_line_comment_pattern = r'#.*'
+        multi_line_comment_pattern = r"'''(.*?)'''|\"\"\"(.*?)\"\"\""
+        
+        for match in re.finditer(single_line_comment_pattern, text):
+            length = match.end() - match.start()
+            format = QTextCharFormat()
+            format.setForeground(QColor("lightgreen"))
+            self.setFormat(match.start(), length, format)
+
+        for match in re.finditer(multi_line_comment_pattern, text, flags=re.DOTALL):
+            length = match.end() - match.start()
+            format = QTextCharFormat()
+            format.setForeground(QColor("lightgreen"))
+            self.setFormat(match.start(), length, format)
+
+        for keyword in self.keywords:
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+                length = match.end() - match.start()
+                format = QTextCharFormat()
+                format.setForeground(QColor("blue"))
+                self.setFormat(match.start(), length, format)
+
+        string_patterns = [
+            r"'(.*?)'",
+            r'"(.*?)"',
+            r"'''(.*?)'''",
+            r'"""(.*?)"""'
+        ]
+        for pattern in string_patterns:
+            for match in re.finditer(pattern, text, flags=re.DOTALL):
+                length = match.end() - match.start()
+                format = QTextCharFormat()
+                format.setForeground(QColor("red"))
+                self.setFormat(match.start(), length, format)
+
+        for term in self.highlighted_terms:
+            pattern = r'\b' + re.escape(term) + r'\b'
+            for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+                length = match.end() - match.start()
+                format = QTextCharFormat()
+                format.setBackground(QColor("yellow"))
+                self.setFormat(match.start(), length, format)
+
+    def highlight_terms(self, terms):
+        self.highlighted_terms = terms
+        self.rehighlight()
+
+class FindDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Find and Replace")
+        self.setGeometry(100, 100, 300, 150)
+        
+        layout = QVBoxLayout()
+
+        self.label_find = QLabel("Enter term to find:")
+        self.line_edit_find = QLineEdit(self)
+        self.label_replace = QLabel("Enter term to replace with:")
+        self.line_edit_replace = QLineEdit(self)
+        self.find_button = QPushButton("Find", self)
+        self.replace_button = QPushButton("Replace", self)
+
+        self.find_button.clicked.connect(self.find_text)
+        self.replace_button.clicked.connect(self.replace_text)
+
+        layout.addWidget(self.label_find)
+        layout.addWidget(self.line_edit_find)
+        layout.addWidget(self.label_replace)
+        layout.addWidget(self.line_edit_replace)
+        layout.addWidget(self.find_button)
+        layout.addWidget(self.replace_button)
+        self.setLayout(layout)
+
+    def find_text(self):
+        term = self.line_edit_find.text()
+        self.parent().highlight_terms(term)
+
+    def replace_text(self):
+        find_term = self.line_edit_find.text()
+        replace_term = self.line_edit_replace.text()
+        self.parent().replace_text(find_term, replace_term)
 
 class AppWindow(QMainWindow):
     def __init__(self):
@@ -15,7 +151,7 @@ class AppWindow(QMainWindow):
         self.setup_menu()
         self.python_file_tab_bar()
         self.debug_tab_bar()
-
+        
     def python_file_tab_bar(self):
         self.file_bar = QTabWidget(self)
         self.file_bar.setGeometry(20, 100, 500, 300)
@@ -60,13 +196,13 @@ class AppWindow(QMainWindow):
         edit_menu = menu_bar.addMenu("Edit")
         find_button = QAction("Find", self)
         find_button.setShortcut("Ctrl+F")
-        find_button.triggered.connect(self.close)
+        find_button.triggered.connect(self.open_find_dialog)
         find_and_replace_button = QAction("Find and Replace", self)
         find_and_replace_button.setShortcut("Ctrl+R")
-        find_and_replace_button.triggered.connect(self.close)
+        find_and_replace_button.triggered.connect(self.open_find_replace_dialog)
         edit_menu.addAction(find_button)
         edit_menu.addAction(find_and_replace_button)
-        
+
         # view_menu = menu_bar.addMenu("View")
         # run_menu = menu_bar.addMenu("Run")
         # tools_menu = menu_bar.addMenu("Tools")
@@ -77,6 +213,8 @@ class AppWindow(QMainWindow):
         new_tab = QTextEdit()
         self.file_bar.addTab(new_tab, f"Tab {self.tab_counter}")
         self.tab_file_paths.append(None)
+        highlighter = Highlighter(new_tab.document())
+        new_tab.highlighter = highlighter
 
     def close_file_tab(self, index):
         if index >= 0:
@@ -102,6 +240,8 @@ class AppWindow(QMainWindow):
         new_tab.setPlainText(content)
         self.file_bar.addTab(new_tab, file_name)
         self.tab_file_paths.append(file_name)
+        highlighter = Highlighter(new_tab.document())
+        new_tab.highlighter = highlighter
 
     def save_file(self):
         current_index = self.file_bar.currentIndex()
@@ -160,3 +300,33 @@ class AppWindow(QMainWindow):
         with open(file_path, 'r') as file:
             content = file.read()
             self.create_new_tab_with_content(content, file_path)
+
+    @pyqtSlot()
+    def open_find_dialog(self):
+        dialog = FindDialog(self)
+        dialog.exec()
+
+    @pyqtSlot()
+    def open_find_replace_dialog(self):
+        dialog = FindDialog(self)
+        dialog.find_button.setText("Find")
+        dialog.replace_button.setText("Replace")
+        dialog.exec()
+
+    @pyqtSlot(str)
+    def highlight_terms(self, text):
+        terms = text.split()
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            if hasattr(text_edit, 'highlighter'):
+                text_edit.highlighter.highlight_terms(terms)
+
+    @pyqtSlot(str, str)
+    def replace_text(self, find_term, replace_term):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            content = text_edit.toPlainText()
+            new_content = content.replace(find_term, replace_term)
+            text_edit.setPlainText(new_content)
