@@ -1,10 +1,9 @@
-import sys
-import re
+import sys, re, os
 from PyQt6.QtWidgets import (
     QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu,
     QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel
 )
-from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut, QFont
+from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut, QFont, QIcon
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
 
@@ -148,6 +147,8 @@ class AppWindow(QMainWindow):
         self.tab_counter = 0
         self.tab_file_paths = []
         self.recent_files = []
+        icon_path = os.path.join("assets", "VenomX X Logo.png")
+        self.setWindowIcon(QIcon(icon_path))
         self.setup_menu()
         self.python_file_tab_bar()
         self.debug_tab_bar()
@@ -169,22 +170,36 @@ class AppWindow(QMainWindow):
         new_button = QAction("New", self)
         new_button.setShortcut("Ctrl+N")
         new_button.triggered.connect(self.create_new_file_tab)
+        new_icon_path = os.path.join("assets", "New-File.png")
+        new_button.setIcon(QIcon(new_icon_path))
         open_button = QAction("Open", self)
         open_button.setShortcut("Ctrl+O")
         open_button.triggered.connect(self.open_file)
+        open_icon_path = os.path.join("assets", "Open-File.png")
+        open_button.setIcon(QIcon(open_icon_path))
         save_button = QAction("Save", self)
         save_button.triggered.connect(self.save_file)
+        save_icon_path = os.path.join("assets", "Save.png")
+        save_button.setIcon(QIcon(save_icon_path))
         save_as_button = QAction("Save As", self)
         save_as_button.setShortcut("Ctrl+S")
         save_as_button.triggered.connect(self.save_as_file)
+        save_as_icon_path = os.path.join("assets", "Save-As.png")
+        save_as_button.setIcon(QIcon(save_as_icon_path))
         print_button = QAction("Print", self)
         print_button.setShortcut("Ctrl+P")
         print_button.triggered.connect(self.print_file)
+        print_icon_path = os.path.join("assets", "Print.png")
+        print_button.setIcon(QIcon(print_icon_path))
         self.recent_files_menu = QMenu("Recent Files", self)
+        recent_files_icon_path = os.path.join("assets", "Recent-Files.png")
+        self.recent_files_menu.setIcon(QIcon(recent_files_icon_path))
         self.update_recent_files_menu()
         exit_button = QAction("Exit", self)
         exit_button.setShortcut("Esc")
         exit_button.triggered.connect(self.close)
+        exit_icon_path = os.path.join("assets", "Exit.png")
+        exit_button.setIcon(QIcon(exit_icon_path))
         file_menu.addAction(new_button)
         file_menu.addAction(open_button)
         file_menu.addAction(save_button)
@@ -194,22 +209,36 @@ class AppWindow(QMainWindow):
         file_menu.addAction(exit_button)
 
         edit_menu = menu_bar.addMenu("Edit")
-        find_button = QAction("Find", self)
-        find_button.setShortcut("Ctrl+F")
-        find_button.triggered.connect(self.open_find_dialog)
-        find_and_replace_button = QAction("Find and Replace", self)
+        undo_button = QAction("Undo", self)
+        redo_button = QAction("Redo", self)
+        cut_button = QAction("Cut", self)
+        copy_button = QAction("Copy", self)
+        paste_button = QAction("Paste", self)
+        indent_selected_lines_button = QAction("Indent Selected Lines", self)
+        dedent_selected_lines_button = QAction("Dedent Selected Lines", self)
+        comment_button = QAction("Comment Out", self)
+        uncomment_button = QAction("Uncomment Out", self)
+        go_to_line_button = QAction("Go To Line", self)
+        find_and_replace_button = QAction("Find And Replace", self)
         find_and_replace_button.setShortcut("Ctrl+R")
         find_and_replace_button.triggered.connect(self.open_find_replace_dialog)
-        edit_menu.addAction(find_button)
+        find_and_replace_icon_path = os.path.join("assets", "Find-Replace.png")
+        find_and_replace_button.setIcon(QIcon(find_and_replace_icon_path))
+        edit_menu.addAction(undo_button)
+        edit_menu.addAction(redo_button)
         edit_menu.addAction(find_and_replace_button)
 
         view_menu = menu_bar.addMenu("View")
         increase_font_size_button = QAction("Increase Font Size", self)
         increase_font_size_button.setShortcut(QKeySequence("Ctrl+Up"))
         increase_font_size_button.triggered.connect(self.increase_font_size)
+        increase_font_icon_path = os.path.join("assets", "Increase-Font.png")
+        increase_font_size_button.setIcon(QIcon(increase_font_icon_path))
         decrease_font_size_button = QAction("Decrease Font Size", self)
         decrease_font_size_button.setShortcut(QKeySequence("Ctrl+Down"))
         decrease_font_size_button.triggered.connect(self.decrease_font_size)
+        decrease_font_icon_path = os.path.join("assets", "Decrease-Font.png")
+        decrease_font_size_button.setIcon(QIcon(decrease_font_icon_path))
         view_menu.addAction(increase_font_size_button)
         view_menu.addAction(decrease_font_size_button)
 
@@ -309,11 +338,6 @@ class AppWindow(QMainWindow):
         with open(file_path, 'r') as file:
             content = file.read()
             self.create_new_tab_with_content(content, file_path)
-
-    @pyqtSlot()
-    def open_find_dialog(self):
-        dialog = FindDialog(self)
-        dialog.exec()
 
     @pyqtSlot()
     def open_find_replace_dialog(self):

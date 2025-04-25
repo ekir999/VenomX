@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\venomx"
+    "\\venomx",
+    "\\venomx\\assets"
   ],
-  "SelectedNode": "\\venomx\\app.py",
+  "SelectedNode": "\\venomx\\assets\\Increase-Font.png",
   "PreviewInSolutionExplorer": false
 }
