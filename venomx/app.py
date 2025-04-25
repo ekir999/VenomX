@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu,
     QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel
 )
-from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut
+from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut, QFont
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
 
@@ -151,7 +151,7 @@ class AppWindow(QMainWindow):
         self.setup_menu()
         self.python_file_tab_bar()
         self.debug_tab_bar()
-        
+
     def python_file_tab_bar(self):
         self.file_bar = QTabWidget(self)
         self.file_bar.setGeometry(20, 100, 500, 300)
@@ -203,7 +203,16 @@ class AppWindow(QMainWindow):
         edit_menu.addAction(find_button)
         edit_menu.addAction(find_and_replace_button)
 
-        # view_menu = menu_bar.addMenu("View")
+        view_menu = menu_bar.addMenu("View")
+        increase_font_size_button = QAction("Increase Font Size", self)
+        increase_font_size_button.setShortcut(QKeySequence("Ctrl+Up"))
+        increase_font_size_button.triggered.connect(self.increase_font_size)
+        decrease_font_size_button = QAction("Decrease Font Size", self)
+        decrease_font_size_button.setShortcut(QKeySequence("Ctrl+Down"))
+        decrease_font_size_button.triggered.connect(self.decrease_font_size)
+        view_menu.addAction(increase_font_size_button)
+        view_menu.addAction(decrease_font_size_button)
+
         # run_menu = menu_bar.addMenu("Run")
         # tools_menu = menu_bar.addMenu("Tools")
         # help_menu = menu_bar.addMenu("Help")
@@ -330,3 +339,21 @@ class AppWindow(QMainWindow):
             content = text_edit.toPlainText()
             new_content = content.replace(find_term, replace_term)
             text_edit.setPlainText(new_content)
+
+    @pyqtSlot()
+    def increase_font_size(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            font = text_edit.font()
+            font.setPointSize(font.pointSize() + 1)
+            text_edit.setFont(font)
+
+    @pyqtSlot()
+    def decrease_font_size(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            font = text_edit.font()
+            font.setPointSize(max(1, font.pointSize() - 1))
+            text_edit.setFont(font)
