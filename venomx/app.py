@@ -147,8 +147,6 @@ class AppWindow(QMainWindow):
         self.tab_counter = 0
         self.tab_file_paths = []
         self.recent_files = []
-        icon_path = os.path.join("assets", "VenomX X Logo.png")
-        self.setWindowIcon(QIcon(icon_path))
         self.setup_menu()
         self.python_file_tab_bar()
         self.debug_tab_bar()
@@ -210,15 +208,52 @@ class AppWindow(QMainWindow):
 
         edit_menu = menu_bar.addMenu("Edit")
         undo_button = QAction("Undo", self)
+        undo_button.setShortcut("Ctrl+Z")
+        undo_button.triggered.connect(self.undo_action)
+        undo_icon_path = os.path.join("assets", "Undo.png")
+        undo_button.setIcon(QIcon(undo_icon_path))
         redo_button = QAction("Redo", self)
+        redo_button.setShortcut("Ctrl+Shift+Z")
+        redo_button.triggered.connect(self.redo_action)
+        redo_icon_path = os.path.join("assets", "Redo.png")
+        redo_button.setIcon(QIcon(redo_icon_path))
         cut_button = QAction("Cut", self)
+        cut_button.setShortcut("Ctrl+X")
+        cut_button.triggered.connect(self.cut_action)
+        cut_icon_path = os.path.join("assets", "Cut.png")
+        cut_button.setIcon(QIcon(cut_icon_path))
         copy_button = QAction("Copy", self)
+        copy_button.setShortcut("Ctrl+C")
+        copy_button.triggered.connect(self.copy_action)
+        copy_icon_path = os.path.join("assets", "Copy.png")
+        copy_button.setIcon(QIcon(copy_icon_path))
         paste_button = QAction("Paste", self)
+        paste_button.setShortcut("Ctrl+V")
+        paste_button.triggered.connect(self.paste_action)
+        paste_icon_path = os.path.join("assets", "Paste.png")
+        paste_button.setIcon(QIcon(paste_icon_path))
         indent_selected_lines_button = QAction("Indent Selected Lines", self)
+        indent_selected_lines_button.setShortcut("Tab")
+        indent_selected_lines_button.triggered.connect(self.indent_action)
+        indent_selected_lines_icon_path = os.path.join("assets", "Indent-Selected-Lines.png")
+        indent_selected_lines_button.setIcon(QIcon(indent_selected_lines_icon_path))
         dedent_selected_lines_button = QAction("Dedent Selected Lines", self)
+        dedent_selected_lines_button.setShortcut("Shift+Tab")
+        dedent_selected_lines_button.triggered.connect(self.dedent_action)
+        dedent_selected_lines_icon_path = os.path.join("assets", "Dedent-Selected-Lines.png")
+        dedent_selected_lines_button.setIcon(QIcon(dedent_selected_lines_icon_path))
         comment_button = QAction("Comment Out", self)
+        comment_button.setShortcut("Ctrl+T")
+        comment_button.triggered.connect(self.comment_action)
+        comment_icon_path = os.path.join("assets", "Comment.png")
+        comment_button.setIcon(QIcon(comment_icon_path))
         uncomment_button = QAction("Uncomment Out", self)
+        uncomment_button.setShortcut("Ctrl+U")
+        uncomment_button.triggered.connect(self.uncomment_action)
+        uncomment_icon_path = os.path.join("assets", "Uncomment.png")
+        uncomment_button.setIcon(QIcon(uncomment_icon_path))
         go_to_line_button = QAction("Go To Line", self)
+        go_to_line_button.setShortcut("Ctrl+G")
         find_and_replace_button = QAction("Find And Replace", self)
         find_and_replace_button.setShortcut("Ctrl+R")
         find_and_replace_button.triggered.connect(self.open_find_replace_dialog)
@@ -226,9 +261,23 @@ class AppWindow(QMainWindow):
         find_and_replace_button.setIcon(QIcon(find_and_replace_icon_path))
         edit_menu.addAction(undo_button)
         edit_menu.addAction(redo_button)
+        edit_menu.addAction(cut_button)
+        edit_menu.addAction(copy_button)
+        edit_menu.addAction(paste_button)
+        edit_menu.addAction(indent_selected_lines_button)
+        edit_menu.addAction(dedent_selected_lines_button)
+        edit_menu.addAction(comment_button)
+        edit_menu.addAction(uncomment_button)
+        edit_menu.addAction(go_to_line_button)
         edit_menu.addAction(find_and_replace_button)
 
         view_menu = menu_bar.addMenu("View")
+        error_assistance_button = QAction("Error Assistance", self)
+        file_directory_hub_button = QAction("Directory Hub", self)
+        notes_and_annotations_button = QAction("Notes And Annotations", self)
+        program_outline_button = QAction("Program Outline", self)
+        program_ast_ir_list_button = QAction("Program AST/IR/List Structures", self)
+        program_stack_button = QAction("View Stack And Heap", self)
         increase_font_size_button = QAction("Increase Font Size", self)
         increase_font_size_button.setShortcut(QKeySequence("Ctrl+Up"))
         increase_font_size_button.triggered.connect(self.increase_font_size)
@@ -239,12 +288,32 @@ class AppWindow(QMainWindow):
         decrease_font_size_button.triggered.connect(self.decrease_font_size)
         decrease_font_icon_path = os.path.join("assets", "Decrease-Font.png")
         decrease_font_size_button.setIcon(QIcon(decrease_font_icon_path))
+        view_menu.addAction(error_assistance_button)
+        view_menu.addAction(file_directory_hub_button)
+        view_menu.addAction(notes_and_annotations_button)
+        view_menu.addAction(program_outline_button)
+        view_menu.addAction(program_ast_ir_list_button)
+        view_menu.addAction(program_stack_button)
         view_menu.addAction(increase_font_size_button)
         view_menu.addAction(decrease_font_size_button)
 
-        # run_menu = menu_bar.addMenu("Run")
-        # tools_menu = menu_bar.addMenu("Tools")
-        # help_menu = menu_bar.addMenu("Help")
+        run_menu = menu_bar.addMenu("Run")
+        run_program_button = QAction("Run Program", self)
+        stop_program_button = QAction("Stop Program", self)
+        run_menu.addAction(run_program_button)
+        run_menu.addAction(stop_program_button)
+
+        tools_menu = menu_bar.addMenu("Tools")
+        open_program_folder_button = QAction("Open Program Folder", self)
+        settings_and_preferences_button = QAction("Settings And Preferences", self)
+        tools_menu.addAction(open_program_folder_button)
+        tools_menu.addAction(settings_and_preferences_button)
+
+        help_menu = menu_bar.addMenu("Help")
+        version_history_button = QAction("Version History", self)
+        about_button = QAction("About VenomX", self)
+        help_menu.addAction(version_history_button)
+        help_menu.addAction(about_button)
 
     def create_new_file_tab(self):
         self.tab_counter += 1
@@ -381,3 +450,77 @@ class AppWindow(QMainWindow):
             font = text_edit.font()
             font.setPointSize(max(1, font.pointSize() - 1))
             text_edit.setFont(font)
+
+    def undo_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            text_edit.undo()
+
+    def redo_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            text_edit.redo()
+
+    def cut_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            text_edit.cut()
+
+    def copy_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            text_edit.copy()
+
+    def paste_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            text_edit.paste()
+
+    def comment_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            cursor = text_edit.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                commented_text = '\n'.join(['# ' + line for line in selected_text.splitlines()])
+                cursor.insertText(commented_text)
+                cursor.removeSelectedText()
+
+    def uncomment_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            cursor = text_edit.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                uncommented_text = '\n'.join([line[2:] if line.startswith('# ') else line for line in selected_text.splitlines()])
+                cursor.insertText(uncommented_text)
+                cursor.removeSelectedText()
+
+    def indent_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            cursor = text_edit.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                indented_text = '\n'.join(['    ' + line for line in selected_text.splitlines()])
+                cursor.insertText(indented_text)
+                cursor.removeSelectedText()
+
+    def dedent_action(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            cursor = text_edit.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                unindented_text = '\n'.join([line[4:] if line.startswith('    ') else line for line in selected_text.splitlines()])
+                cursor.insertText(unindented_text)
+                cursor.removeSelectedText()
