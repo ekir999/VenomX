@@ -1,7 +1,7 @@
 import sys, re, os
 from PyQt6.QtWidgets import (
     QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu,
-    QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel
+    QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel, QHBoxLayout
 )
 from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut, QFont, QIcon
 from PyQt6.QtCore import Qt, pyqtSlot
@@ -148,12 +148,77 @@ class AppWindow(QMainWindow):
         self.tab_file_paths = []
         self.recent_files = []
         self.setup_menu()
+        self.create_button_area()
         self.python_file_tab_bar()
         self.debug_tab_bar()
 
+    def create_button_area(self):
+        self.button_container = QWidget(self)
+        self.button_layout = QHBoxLayout(self.button_container)
+        self.button_container.setFixedHeight(70)
+
+        self.new_file_button = QPushButton("", self.button_container)
+        self.new_file_button.setFixedSize(30, 30)
+        self.new_file_button.clicked.connect(self.create_new_file_tab)
+        new_icon_path = os.path.join("assets", "New-File.png")
+        self.new_file_button.setIcon(QIcon(new_icon_path))
+
+        self.open_file_button = QPushButton("", self.button_container)
+        self.open_file_button.setFixedSize(30, 30)
+        self.open_file_button.clicked.connect(self.open_file)
+        open_icon_path = os.path.join("assets", "Open-File.png")
+        self.open_file_button.setIcon(QIcon(open_icon_path))
+        
+        self.run_program_button = QPushButton("", self.button_container)
+        self.run_program_button.setFixedSize(30, 30)
+        # self.run_program_button.clicked.connect(self.run_program) need to complete...
+        run_program_path = os.path.join("assets", "Run-Program.png")
+        self.run_program_button.setIcon(QIcon(run_program_path))
+        
+        self.debug_program_button = QPushButton("", self.button_container)
+        self.debug_program_button.setFixedSize(30, 30)
+        # self.debug_program_button.clicked.connect(self.debug_program) need to complete...
+        debug_program_path = os.path.join("assets", "Debug-Program.png")
+        self.debug_program_button.setIcon(QIcon(debug_program_path))
+        
+        self.step_in_button = QPushButton("", self.button_container)
+        self.step_in_button.setFixedSize(30, 30)
+        # self.step_in_button.clicked.connect(self.step_in_program) need to complete...
+        step_in_path = os.path.join("assets", "Step-In.png")
+        self.step_in_button.setIcon(QIcon(step_in_path))
+        
+        self.step_out_button = QPushButton("", self.button_container)
+        self.step_out_button.setFixedSize(30, 30)
+        # self.step_out_button.clicked.connect(self.step_out_program) need to complete...
+        step_out_path = os.path.join("assets", "Step-Out.png")
+        self.step_out_button.setIcon(QIcon(step_out_path))
+        
+        self.resume_program_button = QPushButton("", self.button_container)
+        self.resume_program_button.setFixedSize(30, 30)
+        # self.resume_program_button.clicked.connect(self.resume_program) need to complete...
+        resume_program_path = os.path.join("assets", "Resume-Program.png")
+        self.resume_program_button.setIcon(QIcon(resume_program_path))
+        
+        self.stop_program_button = QPushButton("", self.button_container)
+        self.stop_program_button.setFixedSize(30, 30)
+        # self.stop_program_button.clicked.connect(self.stop_program) need to complete...
+        stop_program_path = os.path.join("assets", "Stop-Program.png")
+        self.stop_program_button.setIcon(QIcon(stop_program_path))
+
+        self.button_layout.addWidget(self.new_file_button)
+        self.button_layout.addWidget(self.open_file_button)
+        self.button_layout.addWidget(self.run_program_button)
+        self.button_layout.addWidget(self.debug_program_button)
+        self.button_layout.addWidget(self.step_in_button)
+        self.button_layout.addWidget(self.step_out_button)
+        self.button_layout.addWidget(self.resume_program_button)
+        self.button_layout.addWidget(self.stop_program_button)
+
+        self.setCentralWidget(self.button_container)
+
     def python_file_tab_bar(self):
         self.file_bar = QTabWidget(self)
-        self.file_bar.setGeometry(20, 100, 500, 300)
+        self.file_bar.setGeometry(40, 100, 500, 300)
         self.file_bar.setTabsClosable(True)
         self.file_bar.tabCloseRequested.connect(self.close_file_tab)
 
@@ -165,39 +230,47 @@ class AppWindow(QMainWindow):
         menu_bar = self.menuBar()
 
         file_menu = menu_bar.addMenu("File")
+        
         new_button = QAction("New", self)
         new_button.setShortcut("Ctrl+N")
         new_button.triggered.connect(self.create_new_file_tab)
         new_icon_path = os.path.join("assets", "New-File.png")
         new_button.setIcon(QIcon(new_icon_path))
+        
         open_button = QAction("Open", self)
         open_button.setShortcut("Ctrl+O")
         open_button.triggered.connect(self.open_file)
         open_icon_path = os.path.join("assets", "Open-File.png")
         open_button.setIcon(QIcon(open_icon_path))
+        
         save_button = QAction("Save", self)
         save_button.triggered.connect(self.save_file)
         save_icon_path = os.path.join("assets", "Save.png")
         save_button.setIcon(QIcon(save_icon_path))
+        
         save_as_button = QAction("Save As", self)
         save_as_button.setShortcut("Ctrl+S")
         save_as_button.triggered.connect(self.save_as_file)
         save_as_icon_path = os.path.join("assets", "Save-As.png")
         save_as_button.setIcon(QIcon(save_as_icon_path))
+        
         print_button = QAction("Print", self)
         print_button.setShortcut("Ctrl+P")
         print_button.triggered.connect(self.print_file)
         print_icon_path = os.path.join("assets", "Print.png")
         print_button.setIcon(QIcon(print_icon_path))
+        
         self.recent_files_menu = QMenu("Recent Files", self)
         recent_files_icon_path = os.path.join("assets", "Recent-Files.png")
         self.recent_files_menu.setIcon(QIcon(recent_files_icon_path))
         self.update_recent_files_menu()
+        
         exit_button = QAction("Exit", self)
         exit_button.setShortcut("Esc")
         exit_button.triggered.connect(self.close)
         exit_icon_path = os.path.join("assets", "Exit.png")
         exit_button.setIcon(QIcon(exit_icon_path))
+        
         file_menu.addAction(new_button)
         file_menu.addAction(open_button)
         file_menu.addAction(save_button)
@@ -207,58 +280,73 @@ class AppWindow(QMainWindow):
         file_menu.addAction(exit_button)
 
         edit_menu = menu_bar.addMenu("Edit")
+        
         undo_button = QAction("Undo", self)
         undo_button.setShortcut("Ctrl+Z")
         undo_button.triggered.connect(self.undo_action)
         undo_icon_path = os.path.join("assets", "Undo.png")
         undo_button.setIcon(QIcon(undo_icon_path))
+        
         redo_button = QAction("Redo", self)
         redo_button.setShortcut("Ctrl+Shift+Z")
         redo_button.triggered.connect(self.redo_action)
         redo_icon_path = os.path.join("assets", "Redo.png")
         redo_button.setIcon(QIcon(redo_icon_path))
+        
         cut_button = QAction("Cut", self)
         cut_button.setShortcut("Ctrl+X")
         cut_button.triggered.connect(self.cut_action)
         cut_icon_path = os.path.join("assets", "Cut.png")
         cut_button.setIcon(QIcon(cut_icon_path))
+        
         copy_button = QAction("Copy", self)
         copy_button.setShortcut("Ctrl+C")
         copy_button.triggered.connect(self.copy_action)
         copy_icon_path = os.path.join("assets", "Copy.png")
         copy_button.setIcon(QIcon(copy_icon_path))
+        
         paste_button = QAction("Paste", self)
         paste_button.setShortcut("Ctrl+V")
         paste_button.triggered.connect(self.paste_action)
         paste_icon_path = os.path.join("assets", "Paste.png")
         paste_button.setIcon(QIcon(paste_icon_path))
+        
         indent_selected_lines_button = QAction("Indent Selected Lines", self)
         indent_selected_lines_button.setShortcut("Tab")
         indent_selected_lines_button.triggered.connect(self.indent_action)
         indent_selected_lines_icon_path = os.path.join("assets", "Indent-Selected-Lines.png")
         indent_selected_lines_button.setIcon(QIcon(indent_selected_lines_icon_path))
+        
         dedent_selected_lines_button = QAction("Dedent Selected Lines", self)
         dedent_selected_lines_button.setShortcut("Shift+Tab")
         dedent_selected_lines_button.triggered.connect(self.dedent_action)
         dedent_selected_lines_icon_path = os.path.join("assets", "Dedent-Selected-Lines.png")
         dedent_selected_lines_button.setIcon(QIcon(dedent_selected_lines_icon_path))
+        
         comment_button = QAction("Comment Out", self)
         comment_button.setShortcut("Ctrl+T")
         comment_button.triggered.connect(self.comment_action)
         comment_icon_path = os.path.join("assets", "Comment.png")
         comment_button.setIcon(QIcon(comment_icon_path))
+        
         uncomment_button = QAction("Uncomment Out", self)
         uncomment_button.setShortcut("Ctrl+U")
         uncomment_button.triggered.connect(self.uncomment_action)
         uncomment_icon_path = os.path.join("assets", "Uncomment.png")
         uncomment_button.setIcon(QIcon(uncomment_icon_path))
+        
         go_to_line_button = QAction("Go To Line", self)
         go_to_line_button.setShortcut("Ctrl+G")
+        # go_to_line_button.triggered.connect(self.go_to_line_dialog) need to complete...
+        go_to_line_path = os.path.join("assets", "Go-To-Line.png")
+        go_to_line_button.setIcon(QIcon(go_to_line_path))
+        
         find_and_replace_button = QAction("Find And Replace", self)
         find_and_replace_button.setShortcut("Ctrl+R")
         find_and_replace_button.triggered.connect(self.open_find_replace_dialog)
         find_and_replace_icon_path = os.path.join("assets", "Find-Replace.png")
         find_and_replace_button.setIcon(QIcon(find_and_replace_icon_path))
+        
         edit_menu.addAction(undo_button)
         edit_menu.addAction(redo_button)
         edit_menu.addAction(cut_button)
@@ -298,10 +386,18 @@ class AppWindow(QMainWindow):
         view_menu.addAction(decrease_font_size_button)
 
         run_menu = menu_bar.addMenu("Run")
+        debug_program_button = QAction("Debug Program", self)
+        step_in_button = QAction("Step In", self)
+        step_out_button = QAction("Step Out", self)
         run_program_button = QAction("Run Program", self)
         stop_program_button = QAction("Stop Program", self)
+        resume_program_button = QAction("Stop Program", self)
+        run_menu.addAction(debug_program_button)
+        run_menu.addAction(step_in_button)
+        run_menu.addAction(step_out_button)
         run_menu.addAction(run_program_button)
         run_menu.addAction(stop_program_button)
+        run_menu.addAction(resume_program_button)
 
         tools_menu = menu_bar.addMenu("Tools")
         open_program_folder_button = QAction("Open Program Folder", self)
