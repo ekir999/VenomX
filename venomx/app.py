@@ -1,11 +1,40 @@
 import sys, re, os
 from PyQt6.QtWidgets import (
     QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu,
-    QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel, QHBoxLayout
+    QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel, QHBoxLayout, 
+    QMessageBox
 )
-from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut, QFont, QIcon
+from PyQt6.QtGui import QKeySequence, QTextCharFormat, QSyntaxHighlighter, QColor, QAction, QShortcut, QFont, QIcon, QTextCursor
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtPrintSupport import QPrintDialog, QPrinter
+
+class GoToLineDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Go To Line")
+        self.setGeometry(100, 100, 200, 100)
+        
+        layout = QVBoxLayout()
+
+        self.label = QLabel("Enter line number:")
+        self.line_edit = QLineEdit(self)
+        self.go_button = QPushButton("Go", self)
+
+        self.go_button.clicked.connect(self.go_to_line)
+
+        layout.addWidget(self.label)
+        layout.addWidget(self.line_edit)
+        layout.addWidget(self.go_button)
+        self.setLayout(layout)
+
+    def go_to_line(self):
+        line_number = self.line_edit.text()
+        if line_number.isdigit():
+            line_number = int(line_number)
+            self.parent().go_to_line(line_number)
+            self.close()
+        else:
+            QMessageBox.warning(self, "Invalid Input", "Please enter a valid line number.")
 
 class Highlighter(QSyntaxHighlighter):
     def __init__(self, document):
@@ -337,7 +366,7 @@ class AppWindow(QMainWindow):
         
         go_to_line_button = QAction("Go To Line", self)
         go_to_line_button.setShortcut("Ctrl+G")
-        # go_to_line_button.triggered.connect(self.go_to_line_dialog) need to complete...
+        go_to_line_button.triggered.connect(self.open_go_to_line_dialog)
         go_to_line_path = os.path.join("assets", "Go-To-Line.png")
         go_to_line_button.setIcon(QIcon(go_to_line_path))
         
@@ -414,10 +443,20 @@ class AppWindow(QMainWindow):
     def create_new_file_tab(self):
         self.tab_counter += 1
         new_tab = QTextEdit()
+        new_tab.cursorPositionChanged.connect(self.update_window_title_with_cursor_position)
         self.file_bar.addTab(new_tab, f"Tab {self.tab_counter}")
         self.tab_file_paths.append(None)
         highlighter = Highlighter(new_tab.document())
         new_tab.highlighter = highlighter
+
+    def update_window_title_with_cursor_position(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            cursor = text_edit.textCursor()
+            line = cursor.blockNumber() + 1
+            column = cursor.columnNumber() + 1
+            self.setWindowTitle(f"VenomX - Line: {line}, Column: {column}")
 
     def close_file_tab(self, index):
         if index >= 0:
@@ -436,6 +475,10 @@ class AppWindow(QMainWindow):
                 content = file.read()
                 self.create_new_tab_with_content(content, file_name)
                 self.add_to_recent_files(file_name)
+                current_index = self.file_bar.currentIndex()
+                if current_index >= 0:
+                    text_edit = self.file_bar.widget(current_index)
+                    text_edit.cursorPositionChanged.connect(self.update_window_title_with_cursor_position)
 
     def create_new_tab_with_content(self, content, file_name):
         self.tab_counter += 1
@@ -620,3 +663,19 @@ class AppWindow(QMainWindow):
                 unindented_text = '\n'.join([line[4:] if line.startswith('    ') else line for line in selected_text.splitlines()])
                 cursor.insertText(unindented_text)
                 cursor.removeSelectedText()
+
+    @pyqtSlot(int)
+    def go_to_line(self, line_number):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            cursor = text_edit.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            for _ in range(line_number - 1):
+                cursor.movePosition(QTextCursor.MoveOperation.Down)
+            text_edit.setTextCursor(cursor)
+    
+    @pyqtSlot()
+    def open_go_to_line_dialog(self):
+        dialog = GoToLineDialog(self)
+        dialog.exec()
