@@ -1,4 +1,4 @@
-import sys, re, os
+import sys, re, os, webbrowser
 from PyQt6.QtWidgets import (
     QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu,
     QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel, QHBoxLayout, 
@@ -180,6 +180,7 @@ class AppWindow(QMainWindow):
         self.create_button_area()
         self.python_file_tab_bar()
         self.debug_tab_bar()
+        self.shell_tab_bar()
 
     def create_button_area(self):
         self.button_container = QWidget(self)
@@ -247,13 +248,17 @@ class AppWindow(QMainWindow):
 
     def python_file_tab_bar(self):
         self.file_bar = QTabWidget(self)
-        self.file_bar.setGeometry(40, 100, 500, 300)
+        self.file_bar.setGeometry(40, 100, 500, 400)
         self.file_bar.setTabsClosable(True)
         self.file_bar.tabCloseRequested.connect(self.close_file_tab)
 
     def debug_tab_bar(self):
         debug_bar = QTabWidget(self)
-        debug_bar.setGeometry(550, 100, 200, 500)
+        debug_bar.setGeometry(550, 100, 200, 400)
+
+    def shell_tab_bar(self):
+        shell_bar = QTabWidget(self)
+        shell_bar.setGeometry(40, 525, 710, 150)
 
     def setup_menu(self):
         menu_bar = self.menuBar()
@@ -421,12 +426,14 @@ class AppWindow(QMainWindow):
         run_program_button = QAction("Run Program", self)
         stop_program_button = QAction("Stop Program", self)
         resume_program_button = QAction("Stop Program", self)
+        run_program_in_os_terminal_button = QAction("Run Program In Terminal", self)
         run_menu.addAction(debug_program_button)
         run_menu.addAction(step_in_button)
         run_menu.addAction(step_out_button)
         run_menu.addAction(run_program_button)
         run_menu.addAction(stop_program_button)
         run_menu.addAction(resume_program_button)
+        run_menu.addAction(run_program_in_os_terminal_button)
 
         tools_menu = menu_bar.addMenu("Tools")
         open_program_folder_button = QAction("Open Program Folder", self)
@@ -435,8 +442,19 @@ class AppWindow(QMainWindow):
         tools_menu.addAction(settings_and_preferences_button)
 
         help_menu = menu_bar.addMenu("Help")
+
         version_history_button = QAction("Version History", self)
+        version_history_button.setShortcut(QKeySequence("Ctrl+H"))
+        version_history_button.triggered.connect(self.show_version_history_log)
+        version_history_icon_path = os.path.join("assets", "Version-History.png")
+        version_history_button.setIcon(QIcon(version_history_icon_path))
+        
         about_button = QAction("About VenomX", self)
+        about_button.setShortcut(QKeySequence("Ctrl+A"))
+        about_button.triggered.connect(self.show_about_venomx)
+        about_icon_path = os.path.join("assets", "About-VenomX.png")
+        about_button.setIcon(QIcon(about_icon_path))
+        
         help_menu.addAction(version_history_button)
         help_menu.addAction(about_button)
 
@@ -678,4 +696,32 @@ class AppWindow(QMainWindow):
     @pyqtSlot()
     def open_go_to_line_dialog(self):
         dialog = GoToLineDialog(self)
+        dialog.exec()
+
+    def show_version_history_log(self):
+        webbrowser.open("https://github.com/ekir999/VenomX/blob/main/VERSIONLOG.md")
+
+    def show_about_venomx(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("About VenomX")
+        dialog.setFixedSize(300, 150)
+
+        layout = QVBoxLayout()
+
+        title_label = QLabel("<b>VenomX (not complete yet...)</b>")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        link_label = QLabel('<a href="https://github.com/ekir999/VenomX">https://github.com/ekir999/VenomX</a>')
+        link_label.setOpenExternalLinks(True)
+        link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        copyright_label = QLabel("Copyright \u00A9 Emilio Kiryakos 2025")
+        copyright_label.setFont(QFont("Arial", 8))
+        copyright_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout.addWidget(title_label)
+        layout.addWidget(link_label)
+        layout.addWidget(copyright_label)
+
+        dialog.setLayout(layout)
         dialog.exec()

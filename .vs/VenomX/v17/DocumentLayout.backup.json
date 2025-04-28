@@ -32,7 +32,7 @@
               "RelativeDocumentMoniker": "venomx\\app.py",
               "ToolTip": "C:\\Users\\emiliokiryakos\\OneDrive\\Desktop\\GitHub\\VenomX\\venomx\\app.py",
               "RelativeToolTip": "venomx\\app.py",
-              "ViewState": "AgIAAMcAAAAAAAAAAAAcwNQAAAA6AAAAAAAAAA==",
+              "ViewState": "AgIAAJEBAAAAAAAAAAB4vd0BAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
               "WhenOpened": "2025-04-24T01:13:35.34Z",
               "IsPinned": true,
@@ -49,8 +49,7 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
               "WhenOpened": "2025-04-25T21:49:30.784Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -60,10 +59,10 @@
               "RelativeDocumentMoniker": "TODO.md",
               "ToolTip": "C:\\Users\\emiliokiryakos\\OneDrive\\Desktop\\GitHub\\VenomX\\TODO.md",
               "RelativeToolTip": "TODO.md",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAGAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
               "WhenOpened": "2025-04-27T00:44:48.815Z",
-              "EditorCaption": ""
+              "IsPinned": true
             }
           ]
         }
