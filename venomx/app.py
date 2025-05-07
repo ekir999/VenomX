@@ -1,4 +1,4 @@
-import sys, re, os, webbrowser
+import sys, re, os, webbrowser, subprocess, threading
 from PyQt6.QtWidgets import (
     QMainWindow, QTabWidget, QTextEdit, QFileDialog, QMenu,
     QLineEdit, QVBoxLayout, QWidget, QDialog, QPushButton, QLabel, QHBoxLayout, 
@@ -172,16 +172,16 @@ class AppWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("VenomX")
-        self.resize(800, 800)
+        self.resize(800, 600)
         self.tab_counter = 0
         self.tab_file_paths = []
         self.recent_files = []
+        self.process = None
         self.setup_menu()
         self.create_button_area()
         self.python_file_tab_bar()
         self.debug_tab_bar()
-        self.shell_tab_bar()
-
+        
     def create_button_area(self):
         self.button_container = QWidget(self)
         self.button_layout = QHBoxLayout(self.button_container)
@@ -201,7 +201,7 @@ class AppWindow(QMainWindow):
         
         self.run_program_button = QPushButton("", self.button_container)
         self.run_program_button.setFixedSize(30, 30)
-        # self.run_program_button.clicked.connect(self.run_program) need to complete...
+        self.run_program_button.clicked.connect(self.run_program)
         run_program_path = os.path.join("assets", "Run-Program.png")
         self.run_program_button.setIcon(QIcon(run_program_path))
         
@@ -222,16 +222,10 @@ class AppWindow(QMainWindow):
         # self.step_out_button.clicked.connect(self.step_out_program) need to complete...
         step_out_path = os.path.join("assets", "Step-Out.png")
         self.step_out_button.setIcon(QIcon(step_out_path))
-        
-        self.resume_program_button = QPushButton("", self.button_container)
-        self.resume_program_button.setFixedSize(30, 30)
-        # self.resume_program_button.clicked.connect(self.resume_program) need to complete...
-        resume_program_path = os.path.join("assets", "Resume-Program.png")
-        self.resume_program_button.setIcon(QIcon(resume_program_path))
-        
+                
         self.stop_program_button = QPushButton("", self.button_container)
         self.stop_program_button.setFixedSize(30, 30)
-        # self.stop_program_button.clicked.connect(self.stop_program) need to complete...
+        self.stop_program_button.clicked.connect(self.stop_program)
         stop_program_path = os.path.join("assets", "Stop-Program.png")
         self.stop_program_button.setIcon(QIcon(stop_program_path))
 
@@ -241,7 +235,6 @@ class AppWindow(QMainWindow):
         self.button_layout.addWidget(self.debug_program_button)
         self.button_layout.addWidget(self.step_in_button)
         self.button_layout.addWidget(self.step_out_button)
-        self.button_layout.addWidget(self.resume_program_button)
         self.button_layout.addWidget(self.stop_program_button)
 
         self.setCentralWidget(self.button_container)
@@ -255,10 +248,6 @@ class AppWindow(QMainWindow):
     def debug_tab_bar(self):
         debug_bar = QTabWidget(self)
         debug_bar.setGeometry(550, 100, 200, 400)
-
-    def shell_tab_bar(self):
-        shell_bar = QTabWidget(self)
-        shell_bar.setGeometry(40, 525, 710, 150)
 
     def setup_menu(self):
         menu_bar = self.menuBar()
@@ -424,16 +413,20 @@ class AppWindow(QMainWindow):
         step_in_button = QAction("Step In", self)
         step_out_button = QAction("Step Out", self)
         run_program_button = QAction("Run Program", self)
+        run_program_button.triggered.connect(self.run_program)
+        run_program_icon_path = os.path.join("assets", "Run-Program.png")
+        run_program_button.setIcon(QIcon(run_program_icon_path))
         stop_program_button = QAction("Stop Program", self)
-        resume_program_button = QAction("Stop Program", self)
-        run_program_in_os_terminal_button = QAction("Run Program In Terminal", self)
+        stop_program_button.triggered.connect(self.stop_program)
+        stop_program_icon_path = os.path.join("assets", "Stop-Program.png")
+        stop_program_button.setIcon(QIcon(stop_program_icon_path))
+        run_to_cursor_program_button = QAction("Run to Cursor", self)
         run_menu.addAction(debug_program_button)
         run_menu.addAction(step_in_button)
         run_menu.addAction(step_out_button)
         run_menu.addAction(run_program_button)
         run_menu.addAction(stop_program_button)
-        run_menu.addAction(resume_program_button)
-        run_menu.addAction(run_program_in_os_terminal_button)
+        run_menu.addAction(run_to_cursor_program_button)
 
         tools_menu = menu_bar.addMenu("Tools")
         open_program_folder_button = QAction("Open Program Folder", self)
@@ -725,3 +718,25 @@ class AppWindow(QMainWindow):
 
         dialog.setLayout(layout)
         dialog.exec()
+
+    @pyqtSlot()
+    def run_program(self):
+        current_index = self.file_bar.currentIndex()
+        if current_index >= 0:
+            text_edit = self.file_bar.widget(current_index)
+            script_content = text_edit.toPlainText()
+            temp_file_path = os.path.join(os.getenv("TEMP"), "temp_script.py")
+            with open(temp_file_path, 'w') as temp_file:
+                temp_file.write(script_content)
+            self.thread = threading.Thread(target=self.run_in_thread, args=(temp_file_path,))
+            self.thread.start()
+
+    def run_in_thread(self, temp_file_path):
+        self.process = subprocess.Popen([sys.executable, temp_file_path])
+        self.process.wait()
+
+    @pyqtSlot()
+    def stop_program(self):
+        if self.process is not None:
+            self.process.terminate()
+            self.process = None
